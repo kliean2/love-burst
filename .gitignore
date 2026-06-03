@@ -1,0 +1,27 @@
+# Godot 4+ generated/import cache
+.godot/
+.import/
+
+# Imported translations
+*.translation
+
+# Exported builds
+export/
+exports/
+build/
+builds/
+dist/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs/temp
+*.log
+tmp/
+temp/
+
+# Android export
+/android/

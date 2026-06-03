@@ -1,0 +1,13 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+	"godot": {
+	  "type": "local",
+	  "command": ["npx", "-y", "@coding-solo/godot-mcp"],
+	  "enabled": true,
+	  "environment": {
+		"GODOT_PATH": "C:\\Users\\kliean\\Downloads\\Godot_v4.6.3-stable_win64.exe\\Godot_v4.6.3-stable_win64.exe"
+	  }
+	}
+  }
+}
