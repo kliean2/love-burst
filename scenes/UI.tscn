@@ -15,6 +15,24 @@ text = "Score: 0"
 theme_override_font_sizes/font_size = 28
 horizontal_alignment = 0
 
+[node name="MoveLabel" type="Label" parent="."]
+anchors_preset = 0
+offset_left = 16
+offset_top = 60
+offset_right = 460
+offset_bottom = 100
+text = "Moves: 0"
+theme_override_font_sizes/font_size = 24
+horizontal_alignment = 0
+
+[node name="RestartButton" type="Button" parent="."]
+anchors_preset = 0
+offset_left = 370
+offset_top = 16
+offset_right = 460
+offset_bottom = 52
+text = "Restart"
+
 [node name="ComboLabel" type="Label" parent="."]
 anchors_preset = 0
 offset_left = 140

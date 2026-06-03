@@ -7,18 +7,24 @@ const BOARD_OFFSET_X = 32
 const BOARD_OFFSET_Y = 80
 
 const MAX_CASCADES = 10
+const DEBUG_MODE = false
 
 var grid = []
 var selected_tile = null
 var is_animating = false
 var score = 0
+var moves = 0
 var combo_multiplier = 0
 var cascade_count = 0
 
 signal score_changed(new_score)
+signal moves_changed(count: int)
 signal combo_triggered(multiplier: int)
 
 func _ready():
+	_generate_board()
+
+func _generate_board():
 	for row in range(ROWS):
 		grid.append([])
 		for col in range(COLS):
@@ -37,6 +43,23 @@ func _ready():
 	_verify_initial_board()
 	_ensure_playable_board()
 
+func restart():
+	for row in range(ROWS):
+		for col in range(COLS):
+			if grid[row][col] != null:
+				grid[row][col].queue_free()
+	grid.clear()
+	grid = []
+	score = 0
+	score_changed.emit(0)
+	moves = 0
+	moves_changed.emit(0)
+	combo_multiplier = 0
+	cascade_count = 0
+	selected_tile = null
+	is_animating = false
+	_generate_board()
+
 func _safe_random_type(col, row) -> int:
 	var types = [0, 1, 2, 3, 4]
 	types.shuffle()
@@ -54,7 +77,7 @@ func _verify_initial_board():
 	var matches = find_matches()
 	if matches.is_empty():
 		print("Initial board has no matches")
-	else:
+	elif DEBUG_MODE:
 		print("WARNING: Initial board has ", matches.size(), " matches:")
 		for tile in matches:
 			print("  ", tile.grid_pos)
@@ -129,12 +152,16 @@ func _check_matches_after_swap(tile_a, tile_b):
 			break
 	
 	if involves_swapped:
+		moves += 1
+		moves_changed.emit(moves)
 		combo_multiplier = 1
 		cascade_count = 0
-		print("Valid swap")
-		print("Match found! ", matches.size(), " tiles:")
+		if DEBUG_MODE:
+			print("Valid swap")
+			print("Match found! ", matches.size(), " tiles:")
+			for tile in matches:
+				print("  ", tile.grid_pos)
 		for tile in matches:
-			print("  ", tile.grid_pos)
 			tile.debug_tint(Color.RED)
 		
 		is_animating = true
@@ -142,7 +169,8 @@ func _check_matches_after_swap(tile_a, tile_b):
 			_clear_matched_tiles.bind(matches)
 		)
 	else:
-		print("Invalid swap, swapping back")
+		if DEBUG_MODE:
+			print("Invalid swap, swapping back")
 		_swap_back(tile_a, tile_b)
 
 func _swap_back(tile_a, tile_b):
@@ -274,15 +302,17 @@ func _drop_and_refill():
 	tween.tween_callback(func():
 		var next_matches = find_matches()
 		if next_matches.is_empty():
-			print("Refill: clean board, no accidental matches")
-			if combo_multiplier > 1:
-				print("Cascade ended at x", combo_multiplier)
+			if DEBUG_MODE:
+				print("Refill: clean board, no accidental matches")
+				if combo_multiplier > 1:
+					print("Cascade ended at x", combo_multiplier)
 			combo_multiplier = 0
 			cascade_count = 0
 			_ensure_playable_board()
 			is_animating = false
 		else:
-			print("Refill: ", next_matches.size(), " accidental matches found")
+			if DEBUG_MODE:
+				print("Refill: ", next_matches.size(), " accidental matches found")
 			cascade_count += 1
 			if cascade_count > MAX_CASCADES:
 				print("WARNING: Cascade limit reached, stopping cascade loop")
@@ -294,7 +324,8 @@ func _drop_and_refill():
 			combo_multiplier += 1
 			if combo_multiplier >= 2:
 				combo_triggered.emit(combo_multiplier)
-			print("Cascade x", combo_multiplier, ": ", next_matches.size(), " tiles")
+			if DEBUG_MODE:
+				print("Cascade x", combo_multiplier, ": ", next_matches.size(), " tiles")
 			for tile in next_matches:
 				tile.debug_tint(Color.RED)
 			get_tree().create_timer(0.15).timeout.connect(
@@ -304,7 +335,8 @@ func _drop_and_refill():
 
 func _ensure_playable_board():
 	if _has_possible_moves():
-		print("Board has possible moves")
+		if DEBUG_MODE:
+			print("Board has possible moves")
 		return
 	
 	print("No possible moves found, reshuffling board")

@@ -8,5 +8,6 @@
 script = ExtResource("3")
 
 [node name="Board" parent="." instance=ExtResource("1")]
+position = Vector2(0, 40)
 
 [node name="UI" parent="." instance=ExtResource("2")]
