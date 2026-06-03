@@ -6,12 +6,17 @@ const TILE_SIZE = 52
 const BOARD_OFFSET_X = 32
 const BOARD_OFFSET_Y = 80
 
+const MAX_CASCADES = 10
+
 var grid = []
 var selected_tile = null
 var is_animating = false
 var score = 0
+var combo_multiplier = 0
+var cascade_count = 0
 
 signal score_changed(new_score)
+signal combo_triggered(multiplier: int)
 
 func _ready():
 	for row in range(ROWS):
@@ -124,6 +129,8 @@ func _check_matches_after_swap(tile_a, tile_b):
 			break
 	
 	if involves_swapped:
+		combo_multiplier = 1
+		cascade_count = 0
 		print("Valid swap")
 		print("Match found! ", matches.size(), " tiles:")
 		for tile in matches:
@@ -131,7 +138,7 @@ func _check_matches_after_swap(tile_a, tile_b):
 			tile.debug_tint(Color.RED)
 		
 		is_animating = true
-		get_tree().create_timer(0.3).timeout.connect(
+		get_tree().create_timer(0.2).timeout.connect(
 			_clear_matched_tiles.bind(matches)
 		)
 	else:
@@ -165,7 +172,7 @@ func _finish_swap_back(tile_a, tile_b):
 	is_animating = false
 
 func _clear_matched_tiles(matches):
-	score += matches.size() * 10
+	score += matches.size() * 10 * combo_multiplier
 	score_changed.emit(score)
 	
 	for tile in matches:
@@ -265,13 +272,34 @@ func _drop_and_refill():
 	
 	tween.set_parallel(false)
 	tween.tween_callback(func():
-		var leftover = find_matches()
-		if leftover.is_empty():
+		var next_matches = find_matches()
+		if next_matches.is_empty():
 			print("Refill: clean board, no accidental matches")
+			if combo_multiplier > 1:
+				print("Cascade ended at x", combo_multiplier)
+			combo_multiplier = 0
+			cascade_count = 0
+			_ensure_playable_board()
+			is_animating = false
 		else:
-			print("Refill: ", leftover.size(), " accidental matches found")
-		_ensure_playable_board()
-		is_animating = false
+			print("Refill: ", next_matches.size(), " accidental matches found")
+			cascade_count += 1
+			if cascade_count > MAX_CASCADES:
+				print("WARNING: Cascade limit reached, stopping cascade loop")
+				combo_multiplier = 0
+				cascade_count = 0
+				_ensure_playable_board()
+				is_animating = false
+				return
+			combo_multiplier += 1
+			if combo_multiplier >= 2:
+				combo_triggered.emit(combo_multiplier)
+			print("Cascade x", combo_multiplier, ": ", next_matches.size(), " tiles")
+			for tile in next_matches:
+				tile.debug_tint(Color.RED)
+			get_tree().create_timer(0.15).timeout.connect(
+				_clear_matched_tiles.bind(next_matches)
+			)
 	)
 
 func _ensure_playable_board():

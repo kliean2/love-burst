@@ -14,3 +14,15 @@ offset_bottom = 64
 text = "Score: 0"
 theme_override_font_sizes/font_size = 28
 horizontal_alignment = 0
+
+[node name="ComboLabel" type="Label" parent="."]
+anchors_preset = 0
+offset_left = 140
+offset_top = 120
+offset_right = 396
+offset_bottom = 176
+text = ""
+theme_override_font_sizes/font_size = 48
+horizontal_alignment = 1
+vertical_alignment = 1
+modulate = Color(1, 1, 1, 0)
