@@ -9,20 +9,73 @@ const BOARD_OFFSET_Y = 80
 const MAX_CASCADES = 10
 const DEBUG_MODE = false
 
+const LEVELS = [
+	{ "goal": 300, "moves": 20 },
+	{ "goal": 500, "moves": 22 },
+	{ "goal": 800, "moves": 25 },
+]
+
 var grid = []
 var selected_tile = null
 var is_animating = false
 var score = 0
-var moves = 0
+var moves_left = 0
 var combo_multiplier = 0
 var cascade_count = 0
+var current_level = 0
+var goal_score = 0
+var game_over = false
 
 signal score_changed(new_score)
-signal moves_changed(count: int)
+signal moves_left_changed(count: int)
 signal combo_triggered(multiplier: int)
+signal level_won
+signal level_lost
 
 func _ready():
+	_start_level(0)
+
+func _start_level(level_idx):
+	current_level = level_idx
+	goal_score = LEVELS[level_idx].goal
+	moves_left = LEVELS[level_idx].moves
+	game_over = false
+	
+	if grid.size() > 0:
+		for row in range(ROWS):
+			for col in range(COLS):
+				if grid[row][col] != null:
+					grid[row][col].queue_free()
+	grid.clear()
+	grid = []
+	
+	score = 0
+	combo_multiplier = 0
+	cascade_count = 0
+	selected_tile = null
+	is_animating = false
+	
+	score_changed.emit(0)
+	moves_left_changed.emit(moves_left)
+	
 	_generate_board()
+
+func _check_win_lose():
+	if game_over:
+		return
+	if score >= goal_score:
+		game_over = true
+		level_won.emit()
+	elif moves_left <= 0:
+		game_over = true
+		level_lost.emit()
+
+func next_level():
+	if current_level + 1 < LEVELS.size():
+		_start_level(current_level + 1)
+
+func has_next_level() -> bool:
+	return current_level + 1 < LEVELS.size()
 
 func _generate_board():
 	for row in range(ROWS):
@@ -44,21 +97,7 @@ func _generate_board():
 	_ensure_playable_board()
 
 func restart():
-	for row in range(ROWS):
-		for col in range(COLS):
-			if grid[row][col] != null:
-				grid[row][col].queue_free()
-	grid.clear()
-	grid = []
-	score = 0
-	score_changed.emit(0)
-	moves = 0
-	moves_changed.emit(0)
-	combo_multiplier = 0
-	cascade_count = 0
-	selected_tile = null
-	is_animating = false
-	_generate_board()
+	_start_level(current_level)
 
 func _safe_random_type(col, row) -> int:
 	var types = [0, 1, 2, 3, 4]
@@ -76,14 +115,15 @@ func _safe_random_type(col, row) -> int:
 func _verify_initial_board():
 	var matches = find_matches()
 	if matches.is_empty():
-		print("Initial board has no matches")
+		if DEBUG_MODE:
+			print("Initial board has no matches")
 	elif DEBUG_MODE:
 		print("WARNING: Initial board has ", matches.size(), " matches:")
 		for tile in matches:
 			print("  ", tile.grid_pos)
 
 func _on_tile_clicked(tile):
-	if is_animating:
+	if is_animating or game_over:
 		return
 	
 	if selected_tile == null:
@@ -152,8 +192,8 @@ func _check_matches_after_swap(tile_a, tile_b):
 			break
 	
 	if involves_swapped:
-		moves += 1
-		moves_changed.emit(moves)
+		moves_left -= 1
+		moves_left_changed.emit(moves_left)
 		combo_multiplier = 1
 		cascade_count = 0
 		if DEBUG_MODE:
@@ -161,8 +201,9 @@ func _check_matches_after_swap(tile_a, tile_b):
 			print("Match found! ", matches.size(), " tiles:")
 			for tile in matches:
 				print("  ", tile.grid_pos)
-		for tile in matches:
-			tile.debug_tint(Color.RED)
+		if DEBUG_MODE:
+			for tile in matches:
+				tile.debug_tint(Color.RED)
 		
 		is_animating = true
 		get_tree().create_timer(0.2).timeout.connect(
@@ -211,6 +252,7 @@ func _clear_matched_tiles(matches):
 	tween.set_parallel(true)
 	for tile in matches:
 		tween.tween_property(tile, "modulate:a", 0.0, 0.2)
+		tween.tween_property(tile, "scale", Vector2.ZERO, 0.2)
 	tween.set_parallel(false)
 	tween.tween_callback(func():
 		for tile in matches:
@@ -309,6 +351,7 @@ func _drop_and_refill():
 			combo_multiplier = 0
 			cascade_count = 0
 			_ensure_playable_board()
+			_check_win_lose()
 			is_animating = false
 		else:
 			if DEBUG_MODE:
@@ -319,6 +362,7 @@ func _drop_and_refill():
 				combo_multiplier = 0
 				cascade_count = 0
 				_ensure_playable_board()
+				_check_win_lose()
 				is_animating = false
 				return
 			combo_multiplier += 1
@@ -326,8 +370,8 @@ func _drop_and_refill():
 				combo_triggered.emit(combo_multiplier)
 			if DEBUG_MODE:
 				print("Cascade x", combo_multiplier, ": ", next_matches.size(), " tiles")
-			for tile in next_matches:
-				tile.debug_tint(Color.RED)
+				for tile in next_matches:
+					tile.debug_tint(Color.RED)
 			get_tree().create_timer(0.15).timeout.connect(
 				_clear_matched_tiles.bind(next_matches)
 			)
