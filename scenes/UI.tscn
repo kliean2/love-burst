@@ -58,6 +58,15 @@ offset_bottom = 72
 text = "Next Level"
 visible = false
 
+[node name="MainMenuButton" type="Button" parent="."]
+anchors_preset = 0
+offset_left = 330
+offset_top = 42
+offset_right = 460
+offset_bottom = 72
+text = "Main Menu"
+visible = false
+
 [node name="ResultLabel" type="Label" parent="."]
 anchors_preset = 0
 offset_left = 80
@@ -81,3 +90,69 @@ theme_override_font_sizes/font_size = 48
 horizontal_alignment = 1
 vertical_alignment = 1
 modulate = Color(1, 1, 1, 0)
+
+[node name="MainMenuPanel" type="ColorRect" parent="."]
+anchors_preset = 0
+offset_left = 0
+offset_top = 0
+offset_right = 480
+offset_bottom = 720
+color = Color(0.05, 0.02, 0.1, 0.95)
+mouse_filter = 0
+
+[node name="MenuTitleLabel" type="Label" parent="MainMenuPanel"]
+anchors_preset = 0
+offset_left = 60
+offset_top = 160
+offset_right = 420
+offset_bottom = 240
+text = "Love Burst"
+theme_override_font_sizes/font_size = 56
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="MenuStartButton" type="Button" parent="MainMenuPanel"]
+anchors_preset = 0
+offset_left = 160
+offset_top = 340
+offset_right = 320
+offset_bottom = 380
+text = "Start Game"
+
+[node name="MenuHowToPlayButton" type="Button" parent="MainMenuPanel"]
+anchors_preset = 0
+offset_left = 160
+offset_top = 400
+offset_right = 320
+offset_bottom = 440
+text = "How to Play"
+
+[node name="HowToPlayPanel" type="ColorRect" parent="."]
+anchors_preset = 0
+offset_left = 0
+offset_top = 0
+offset_right = 480
+offset_bottom = 720
+color = Color(0.05, 0.02, 0.1, 0.95)
+mouse_filter = 0
+visible = false
+
+[node name="HowToPlayLabel" type="Label" parent="HowToPlayPanel"]
+anchors_preset = 0
+offset_left = 40
+offset_top = 180
+offset_right = 440
+offset_bottom = 340
+text = "Swap adjacent hearts to match 3 or more.\nReach the score goal before you run out of moves.\nCombos give bonus points."
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="HowToPlayBackButton" type="Button" parent="HowToPlayPanel"]
+anchors_preset = 0
+offset_left = 160
+offset_top = 400
+offset_right = 320
+offset_bottom = 440
+text = "Back"

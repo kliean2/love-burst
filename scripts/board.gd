@@ -24,6 +24,7 @@ var combo_multiplier = 0
 var cascade_count = 0
 var current_level = 0
 var goal_score = 0
+var game_started = false
 var game_over = false
 
 signal score_changed(new_score)
@@ -69,6 +70,17 @@ func _check_win_lose():
 	elif moves_left <= 0:
 		game_over = true
 		level_lost.emit()
+
+func start_game():
+	game_started = true
+	current_level = 0
+	_start_level(0)
+
+func stop_game():
+	game_started = false
+	game_over = true
+	selected_tile = null
+	is_animating = false
 
 func next_level():
 	if current_level + 1 < LEVELS.size():
@@ -123,7 +135,7 @@ func _verify_initial_board():
 			print("  ", tile.grid_pos)
 
 func _on_tile_clicked(tile):
-	if is_animating or game_over:
+	if not game_started or is_animating or game_over:
 		return
 	
 	if selected_tile == null:

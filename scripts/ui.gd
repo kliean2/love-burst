@@ -8,11 +8,22 @@ extends CanvasLayer
 @onready var result_label = $ResultLabel
 @onready var restart_button = $RestartButton
 @onready var next_level_button = $NextLevelButton
+@onready var main_menu_button = $MainMenuButton
+
+@onready var main_menu_panel = $MainMenuPanel
+@onready var how_to_play_panel = $HowToPlayPanel
+@onready var menu_start_button = $MainMenuPanel/MenuStartButton
+@onready var menu_how_to_play_button = $MainMenuPanel/MenuHowToPlayButton
+@onready var how_to_play_back_button = $HowToPlayPanel/HowToPlayBackButton
 
 var combo_tween: Tween
 
 signal restart_pressed
 signal next_level_pressed
+signal start_game_pressed
+signal show_how_to_play_pressed
+signal back_to_menu_pressed
+signal main_menu_pressed
 
 func _ready():
 	restart_button.pressed.connect(func():
@@ -21,6 +32,30 @@ func _ready():
 	next_level_button.pressed.connect(func():
 		next_level_pressed.emit()
 	)
+	menu_start_button.pressed.connect(func():
+		start_game_pressed.emit()
+	)
+	menu_how_to_play_button.pressed.connect(func():
+		show_how_to_play_pressed.emit()
+	)
+	how_to_play_back_button.pressed.connect(func():
+		back_to_menu_pressed.emit()
+	)
+	main_menu_button.pressed.connect(func():
+		main_menu_pressed.emit()
+	)
+
+func show_menu():
+	main_menu_panel.visible = true
+	how_to_play_panel.visible = false
+
+func show_how_to_play():
+	main_menu_panel.visible = false
+	how_to_play_panel.visible = true
+
+func show_gameplay():
+	main_menu_panel.visible = false
+	how_to_play_panel.visible = false
 
 func update_score(new_score: int):
 	score_label.text = "Score: " + str(new_score)
@@ -43,6 +78,7 @@ func show_win(has_next: bool):
 	result_label.visible = true
 	next_level_button.visible = has_next
 	next_level_button.disabled = false
+	main_menu_button.visible = not has_next
 
 func show_lose():
 	result_label.text = "Try Again!"
@@ -54,6 +90,7 @@ func clear_result():
 	result_label.visible = false
 	next_level_button.visible = false
 	next_level_button.disabled = false
+	main_menu_button.visible = false
 
 func clear_combo():
 	if combo_tween:

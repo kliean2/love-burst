@@ -11,10 +11,33 @@ func _ready():
 	board.level_lost.connect(_on_level_lost)
 	ui.restart_pressed.connect(_on_restart_pressed)
 	ui.next_level_pressed.connect(_on_next_level_pressed)
+	ui.start_game_pressed.connect(_on_start_game_pressed)
+	ui.show_how_to_play_pressed.connect(_on_show_how_to_play_pressed)
+	ui.back_to_menu_pressed.connect(_on_back_to_menu_pressed)
+	ui.main_menu_pressed.connect(_on_main_menu_pressed)
+	ui.show_menu()
+
+func _on_start_game_pressed():
+	board.start_game()
+	ui.show_gameplay()
+	ui.clear_combo()
+	ui.clear_result()
 	ui.update_score(0)
 	ui.update_moves(board.moves_left)
 	ui.update_level(board.current_level)
 	ui.update_goal(board.goal_score)
+
+func _on_show_how_to_play_pressed():
+	ui.show_how_to_play()
+
+func _on_back_to_menu_pressed():
+	ui.show_menu()
+
+func _on_main_menu_pressed():
+	board.stop_game()
+	ui.show_menu()
+	ui.clear_combo()
+	ui.clear_result()
 
 func _on_score_changed(new_score: int):
 	ui.update_score(new_score)
